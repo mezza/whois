@@ -31,5 +31,37 @@ describe Whois::Server::SocketHandler do
         expect(result).to eq("response data")
       end
     end
+
+    it "treats ECONNRESET as EOF when data has already been received" do
+      socket = instance_double(TCPSocket)
+      expect(socket).to receive(:write).with("example.test\r\n")
+      expect(socket).to receive(:read_nonblock).with(1024, exception: false).and_return("partial data")
+      expect(socket).to receive(:read_nonblock).with(1024, exception: false).and_raise(Errno::ECONNRESET)
+      expect(socket).to receive(:close)
+
+      expect(TCPSocket).to receive(:new)
+        .with("whois.test", 43)
+        .and_return(socket)
+
+      handler = described_class.new
+      result = handler.call("example.test", "whois.test", 43)
+      expect(result).to eq("partial data")
+    end
+
+    it "raises ECONNRESET as ConnectionError when no data has been received" do
+      socket = instance_double(TCPSocket)
+      expect(socket).to receive(:write).with("example.test\r\n")
+      expect(socket).to receive(:read_nonblock).with(1024, exception: false).and_raise(Errno::ECONNRESET)
+      expect(socket).to receive(:close)
+
+      expect(TCPSocket).to receive(:new)
+        .with("whois.test", 43)
+        .and_return(socket)
+
+      handler = described_class.new
+      expect {
+        handler.call("example.test", "whois.test", 43)
+      }.to raise_error(Whois::ConnectionError)
+    end
   end
 end

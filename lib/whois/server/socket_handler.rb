@@ -56,15 +56,21 @@ module Whois
         client.write("#{query}\r\n")    # I could use put(foo) and forget the \n
 
         content = +"".b
-        while (chunk = client.read_nonblock(1024, exception: false))
-          case chunk
-          when :wait_readable
-            IO.select([client], nil, nil, 10) || break
-          when nil
-            break
-          else
-            content << chunk
+        begin
+          while (chunk = client.read_nonblock(1024, exception: false))
+            case chunk
+            when :wait_readable
+              IO.select([client], nil, nil, 10) || break
+            when nil
+              break
+            else
+              content << chunk
+            end
           end
+        rescue Errno::ECONNRESET
+          # Some servers reset the connection after sending the response
+          # instead of closing it gracefully. If we have data, treat it as EOF.
+          raise if content.empty?
         end
 
         content.force_encoding("UTF-8")
