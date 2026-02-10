@@ -18,8 +18,8 @@ describe Whois::Server::SocketHandler do
       it "executes a socket connection for given args" do
         socket = instance_double(TCPSocket)
         expect(socket).to receive(:write).with("example.test\r\n")
-        expect(socket).to receive(:close_write)
-        expect(socket).to receive(:read)
+        expect(socket).to receive(:read_nonblock).with(1024, exception: false).and_return("response data")
+        expect(socket).to receive(:read_nonblock).with(1024, exception: false).and_return(nil)
         expect(socket).to receive(:close)
 
         expect(TCPSocket).to receive(:new)
@@ -27,7 +27,8 @@ describe Whois::Server::SocketHandler do
           .and_return(socket)
 
         handler = described_class.new
-        handler.call("example.test", "whois.test", 43)
+        result = handler.call("example.test", "whois.test", 43)
+        expect(result).to eq("response data")
       end
     end
   end
