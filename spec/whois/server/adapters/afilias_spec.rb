@@ -12,7 +12,7 @@ describe Whois::Server::Adapters::Afilias do
       it "returns the WHOIS record" do
         response = "No match for example.test."
         expected = response
-        expect(server.query_handler).to receive(:call).with("example.test", "whois.afilias-grs.info", 43).and_return(response)
+        expect(server.query_handler).to receive(:call).with("example.test", "whois.afilias-grs.info", 43, timeout: nil).and_return(response)
 
         record = server.lookup("example.test")
         expect(record.to_s).to eq(expected)
@@ -26,8 +26,8 @@ describe Whois::Server::Adapters::Afilias do
         referral = File.read(fixture("referrals/afilias.bz.txt"))
         response = "Match for example.test."
         expected = "#{referral}\n#{response}"
-        expect(server.query_handler).to receive(:call).with("example.test", "whois.afilias-grs.info", 43).and_return(referral)
-        expect(server.query_handler).to receive(:call).with("example.test", "whois.belizenic.bz", 43).and_return(response)
+        expect(server.query_handler).to receive(:call).with("example.test", "whois.afilias-grs.info", 43, timeout: nil).and_return(referral)
+        expect(server.query_handler).to receive(:call).with("example.test", "whois.belizenic.bz", 43, timeout: nil).and_return(response)
 
         record = server.lookup("example.test")
         expect(record.to_s).to eq(expected)
@@ -38,8 +38,8 @@ describe Whois::Server::Adapters::Afilias do
       it "ignores referral if options[:referral] is false" do
         referral = File.read(fixture("referrals/afilias.bz.txt"))
         server.options[:referral] = false
-        expect(server.query_handler).to receive(:call).with("example.test", "whois.afilias-grs.info", 43).and_return(referral)
-        expect(server.query_handler).not_to receive(:call).with("example.test", "whois.belizenic.bz", 43)
+        expect(server.query_handler).to receive(:call).with("example.test", "whois.afilias-grs.info", 43, timeout: nil).and_return(referral)
+        expect(server.query_handler).not_to receive(:call).with("example.test", "whois.belizenic.bz", 43, timeout: nil)
 
         record = server.lookup("example.test")
         expect(record.parts.size).to eq(1)

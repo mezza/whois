@@ -11,7 +11,7 @@ describe Whois::Server::Adapters::Standard do
       response = "Whois Response"
       expected = response
       server = described_class.new(*definition)
-      expect(server.query_handler).to receive(:call).with("domain.test", "whois.test", 43).and_return(response)
+      expect(server.query_handler).to receive(:call).with("domain.test", "whois.test", 43, timeout: nil).and_return(response)
 
       record = server.lookup("domain.test")
       expect(record.to_s).to eq(expected)
@@ -22,7 +22,7 @@ describe Whois::Server::Adapters::Standard do
       it "sends the request to given port" do
         response = "Whois Response"
         server = described_class.new(:tld, ".test", "whois.test", { port: 20 })
-        expect(server.query_handler).to receive(:call).with("domain.test", "whois.test", 20).and_return(response)
+        expect(server.query_handler).to receive(:call).with("domain.test", "whois.test", 20, timeout: nil).and_return(response)
 
         server.lookup("domain.test")
       end
@@ -33,7 +33,7 @@ describe Whois::Server::Adapters::Standard do
         response = "Whois Response"
         server = described_class.new(:tld, ".test", "whois.test", { port: 20 })
         server.configure(bind_host: "192.168.1.100", bind_port: 3000)
-        expect(server.query_handler).to receive(:call).with("domain.test", "whois.test", 20, "192.168.1.100", 3000).and_return(response)
+        expect(server.query_handler).to receive(:call).with("domain.test", "whois.test", 20, "192.168.1.100", 3000, timeout: nil).and_return(response)
 
         server.lookup("domain.test")
       end

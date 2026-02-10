@@ -10,7 +10,7 @@ describe Whois do
       with_definitions do
         Whois::Server.define(:tld, "it", "whois.nic.it")
         expect(Whois::Server::Adapters::Standard.query_handler).to receive(:call)
-          .with("example.it", "whois.nic.it", 43)
+          .with("example.it", "whois.nic.it", 43, timeout: 10)
           .and_return(response)
 
         record = described_class.lookup("example.it")
@@ -30,7 +30,7 @@ describe Whois do
       with_definitions do
         Whois::Server.define(:tld, "it", "whois.nic.it")
         expect(Whois::Server::Adapters::Standard.query_handler).to receive(:call)
-          .with("example.it", "whois.nic.it", 43, "192.168.1.1", 3000)
+          .with("example.it", "whois.nic.it", 43, "192.168.1.1", 3000, timeout: 10)
           .and_return(response)
 
         client = Whois::Client.new(bind_host: "192.168.1.1", bind_port: 3000)
@@ -44,7 +44,7 @@ describe Whois do
       with_definitions do
         Whois::Server.define(:tld, "it", "whois.nic.it")
         expect(Whois::Server::Adapters::Standard.query_handler).to receive(:call)
-          .with("example.it", "whois.nic.it", 43, Whois::Server::Adapters::Base::DEFAULT_BIND_HOST, 3000)
+          .with("example.it", "whois.nic.it", 43, Whois::Server::Adapters::Base::DEFAULT_BIND_HOST, 3000, timeout: 10)
           .and_return(response)
 
         client = Whois::Client.new(bind_port: 3000)
@@ -58,7 +58,7 @@ describe Whois do
       with_definitions do
         Whois::Server.define(:tld, "it", "whois.nic.it")
         expect(Whois::Server::Adapters::Standard.query_handler).to receive(:call)
-          .with("example.it", "whois.example.com", 43)
+          .with("example.it", "whois.example.com", 43, timeout: 10)
           .and_return(response)
 
         client = Whois::Client.new(host: "whois.example.com")

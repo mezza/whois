@@ -87,46 +87,24 @@ describe Whois::Client do
       }.to raise_error(Whois::WebInterfaceError, /www\.example\.com/)
     end
 
-    it "raises if timeout is exceeded" do
-      adapter = Class.new(Whois::Server::Adapters::Base) do
-        def lookup(*)
-          sleep(2)
-        end
-      end
-      expect(Whois::Server).to receive(:guess).and_return(adapter.new(:tld, "test", "whois.test"))
+    it "passes timeout to the server via settings" do
+      server = Whois::Server::Adapters::Base.new(:tld, "test", "whois.test")
+      expect(server).to receive(:lookup).with("example.test")
+      expect(Whois::Server).to receive(:guess).with("example.test").and_return(server)
 
-      client = described_class.new(timeout: 1)
-      expect {
-        client.lookup("example.test")
-      }.to raise_error(Timeout::Error)
+      client = described_class.new(timeout: 30)
+      client.lookup("example.test")
+      expect(server.options[:timeout]).to eq(30)
     end
 
-    it "does not raise if timeout is not exceeded" do
-      adapter = Class.new(Whois::Server::Adapters::Base) do
-        def lookup(*)
-          sleep(1)
-        end
-      end
-      expect(Whois::Server).to receive(:guess).and_return(adapter.new(:tld, "test", "whois.test"))
+    it "passes nil timeout to the server when set to nil" do
+      server = Whois::Server::Adapters::Base.new(:tld, "test", "whois.test")
+      expect(server).to receive(:lookup).with("example.test")
+      expect(Whois::Server).to receive(:guess).with("example.test").and_return(server)
 
-      client = described_class.new(timeout: 5)
-      expect {
-        client.lookup("example.test")
-      }.not_to raise_error
-    end
-
-    it "supports unlimited timeout" do
-      adapter = Class.new(Whois::Server::Adapters::Base) do
-        def lookup(*)
-          sleep(1)
-        end
-      end
-      expect(Whois::Server).to receive(:guess).and_return(adapter.new(:tld, "test", "whois.test"))
-
-      client = described_class.new.tap { |c| c.timeout = nil }
-      expect {
-        client.lookup("example.test")
-      }.not_to raise_error
+      client = described_class.new(timeout: nil)
+      client.lookup("example.test")
+      expect(server.options[:timeout]).to be_nil
     end
   end
 

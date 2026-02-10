@@ -9,12 +9,9 @@
 #++
 
 
-require "timeout"
-
-
 module Whois
   class Client
-    # The maximum time to run a WHOIS query, expressed in seconds.
+    # The maximum time for a single WHOIS connection, expressed in seconds.
     #
     # @return [Fixnum] Timeout value in seconds.
     DEFAULT_TIMEOUT = 10
@@ -79,7 +76,7 @@ module Whois
     # @param  [#to_s] object The string to be sent as lookup parameter.
     # @return [Whois::Record] The object containing the WHOIS response.
     #
-    # @raise  [Timeout::Error]
+    # @raise  [Whois::ConnectionError]
     #
     # @example
     #
@@ -88,11 +85,9 @@ module Whois
     #
     def lookup(object)
       string = object.to_s.downcase
-      Timeout.timeout(timeout) do
-        @server = Server.guess(string)
-        @server.configure(settings)
-        @server.lookup(string)
-      end
+      @server = Server.guess(string)
+      @server.configure(settings.merge(timeout: timeout))
+      @server.lookup(string)
     end
   end
 end

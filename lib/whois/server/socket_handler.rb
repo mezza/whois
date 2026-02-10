@@ -19,8 +19,7 @@ module Whois
     # Whois library. It performs the WHOIS query using a synchronous
     # socket connection.
     class SocketHandler
-      CONNECT_TIMEOUT = 10
-      READ_TIMEOUT = 10
+      DEFAULT_TIMEOUT = 10
 
       # Array of connection errors to rescue
       # and wrap into a {Whois::ConnectionError}
@@ -31,14 +30,16 @@ module Whois
 
       # Performs the Socket request.
       #
-      # @todo *args might probably be a Hash.
-      #
       # @param  [String] query
-      # @param  [Array] args
+      # @param  [String] host
+      # @param  [Integer] port
+      # @param  [String, nil] local_host
+      # @param  [Integer, nil] local_port
+      # @param  [Integer, nil] timeout
       # @return [String]
       #
-      def call(query, *args)
-        execute(query, *args)
+      def call(query, *args, timeout: nil)
+        execute(query, *args, timeout: timeout)
       rescue *RESCUABLE_CONNECTION_ERRORS => e
         raise ConnectionError, "#{e.class}: #{e.message}"
       end
@@ -49,13 +50,18 @@ module Whois
       # sends the +query+ and reads the response.
       #
       # @param  [String] query
-      # @param  [Array] args
+      # @param  [String] host
+      # @param  [Integer] port
+      # @param  [String, nil] local_host
+      # @param  [Integer, nil] local_port
+      # @param  [Integer, nil] timeout
       # @return [String]
       #
       # @api private
       #
-      def execute(query, host, port, local_host = nil, local_port = nil)
-        client = Socket.tcp(host, port, local_host, local_port, connect_timeout: CONNECT_TIMEOUT)
+      def execute(query, host, port, local_host = nil, local_port = nil, timeout: nil)
+        timeout = timeout || DEFAULT_TIMEOUT
+        client = Socket.tcp(host, port, local_host, local_port, connect_timeout: timeout)
         client.write("#{query}\r\n")
 
         content = +"".b
@@ -63,7 +69,7 @@ module Whois
           while (chunk = client.read_nonblock(1024, exception: false))
             case chunk
             when :wait_readable
-              IO.select([client], nil, nil, READ_TIMEOUT) || break
+              IO.select([client], nil, nil, timeout) || break
             when nil
               break
             else

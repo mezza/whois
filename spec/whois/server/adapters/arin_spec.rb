@@ -11,7 +11,7 @@ describe Whois::Server::Adapters::Arin do
       it "returns the WHOIS record" do
         response = "Whois Response"
         expected = response
-        expect(server.query_handler).to receive(:call).with("n + 0.0.0.0", "whois.arin.net", 43).and_return(response)
+        expect(server.query_handler).to receive(:call).with("n + 0.0.0.0", "whois.arin.net", 43, timeout: nil).and_return(response)
         record = server.lookup("0.0.0.0")
         expect(record.to_s).to eq(expected)
         expect(record.parts.size).to eq(1)
@@ -24,8 +24,8 @@ describe Whois::Server::Adapters::Arin do
         referral = File.read(fixture("referrals/arin_referral_whois.txt"))
         response = "Whois Response"
         expected = "#{referral}\n#{response}"
-        expect(server.query_handler).to receive(:call).with("n + 0.0.0.0", "whois.arin.net", 43).and_return(referral)
-        expect(server.query_handler).to receive(:call).with("0.0.0.0", "whois.ripe.net", 43).and_return(response)
+        expect(server.query_handler).to receive(:call).with("n + 0.0.0.0", "whois.arin.net", 43, timeout: nil).and_return(referral)
+        expect(server.query_handler).to receive(:call).with("0.0.0.0", "whois.ripe.net", 43, timeout: nil).and_return(response)
 
         record = server.lookup("0.0.0.0")
         expect(record.to_s).to eq(expected)
@@ -38,8 +38,8 @@ describe Whois::Server::Adapters::Arin do
         referral = File.read(fixture("referrals/arin_referral_rwhois.txt"))
         response = "Whois Response"
         expected = "#{referral}\n#{response}"
-        expect(server.query_handler).to receive(:call).with("n + 0.0.0.0", "whois.arin.net", 43).and_return(referral)
-        expect(server.query_handler).to receive(:call).with("0.0.0.0", "rwhois.servernap.net", 4321).and_return(response)
+        expect(server.query_handler).to receive(:call).with("n + 0.0.0.0", "whois.arin.net", 43, timeout: nil).and_return(referral)
+        expect(server.query_handler).to receive(:call).with("0.0.0.0", "rwhois.servernap.net", 4321, timeout: nil).and_return(response)
 
         record = server.lookup("0.0.0.0")
         expect(record.to_s).to eq(expected)
@@ -51,8 +51,8 @@ describe Whois::Server::Adapters::Arin do
       it "ignores referral if options[:referral] is false" do
         referral = File.read(fixture("referrals/arin_referral_whois.txt"))
         server.options[:referral] = false
-        expect(server.query_handler).to receive(:call).with("n + 0.0.0.0", "whois.arin.net", 43).and_return(referral)
-        expect(server.query_handler).not_to receive(:call).with("0.0.0.0", "whois.ripe.net", 43)
+        expect(server.query_handler).to receive(:call).with("n + 0.0.0.0", "whois.arin.net", 43, timeout: nil).and_return(referral)
+        expect(server.query_handler).not_to receive(:call).with("0.0.0.0", "whois.ripe.net", 43, timeout: nil)
 
         record = server.lookup("0.0.0.0")
         expect(record.parts.size).to eq(1)
@@ -60,7 +60,7 @@ describe Whois::Server::Adapters::Arin do
 
       it "ignores referral (gracefully) if missing" do
         referral = File.read(fixture("referrals/arin_referral_missing.txt"))
-        expect(server.query_handler).to receive(:call).with("n + 0.0.0.0", "whois.arin.net", 43).and_return(referral)
+        expect(server.query_handler).to receive(:call).with("n + 0.0.0.0", "whois.arin.net", 43, timeout: nil).and_return(referral)
         expect(server.query_handler).not_to receive(:call)
 
         record = server.lookup("0.0.0.0")
@@ -70,8 +70,8 @@ describe Whois::Server::Adapters::Arin do
       it "folows referrals without ports" do
         referral = File.read(fixture("referrals/arin_referral_apnic.txt"))
         response = "Whois Response"
-        expect(server.query_handler).to receive(:call).with("n + 0.0.0.0", "whois.arin.net", 43).and_return(referral)
-        expect(server.query_handler).to receive(:call).with("0.0.0.0", "whois.apnic.net", 43).and_return(response)
+        expect(server.query_handler).to receive(:call).with("n + 0.0.0.0", "whois.arin.net", 43, timeout: nil).and_return(referral)
+        expect(server.query_handler).to receive(:call).with("0.0.0.0", "whois.apnic.net", 43, timeout: nil).and_return(response)
 
         record = server.lookup("0.0.0.0")
         expect(record.parts.size).to eq(2)
