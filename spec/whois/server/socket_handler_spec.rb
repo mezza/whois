@@ -16,14 +16,14 @@ describe Whois::Server::SocketHandler do
       end
 
       it "executes a socket connection for given args" do
-        socket = instance_double(TCPSocket)
+        socket = instance_double(Socket)
         expect(socket).to receive(:write).with("example.test\r\n")
         expect(socket).to receive(:read_nonblock).with(1024, exception: false).and_return("response data")
         expect(socket).to receive(:read_nonblock).with(1024, exception: false).and_return(nil)
         expect(socket).to receive(:close)
 
-        expect(TCPSocket).to receive(:new)
-          .with("whois.test", 43)
+        expect(Socket).to receive(:tcp)
+          .with("whois.test", 43, nil, nil, connect_timeout: 10)
           .and_return(socket)
 
         handler = described_class.new
@@ -33,14 +33,14 @@ describe Whois::Server::SocketHandler do
     end
 
     it "treats ECONNRESET as EOF when data has already been received" do
-      socket = instance_double(TCPSocket)
+      socket = instance_double(Socket)
       expect(socket).to receive(:write).with("example.test\r\n")
       expect(socket).to receive(:read_nonblock).with(1024, exception: false).and_return("partial data")
       expect(socket).to receive(:read_nonblock).with(1024, exception: false).and_raise(Errno::ECONNRESET)
       expect(socket).to receive(:close)
 
-      expect(TCPSocket).to receive(:new)
-        .with("whois.test", 43)
+      expect(Socket).to receive(:tcp)
+        .with("whois.test", 43, nil, nil, connect_timeout: 10)
         .and_return(socket)
 
       handler = described_class.new
@@ -49,13 +49,13 @@ describe Whois::Server::SocketHandler do
     end
 
     it "raises ECONNRESET as ConnectionError when no data has been received" do
-      socket = instance_double(TCPSocket)
+      socket = instance_double(Socket)
       expect(socket).to receive(:write).with("example.test\r\n")
       expect(socket).to receive(:read_nonblock).with(1024, exception: false).and_raise(Errno::ECONNRESET)
       expect(socket).to receive(:close)
 
-      expect(TCPSocket).to receive(:new)
-        .with("whois.test", 43)
+      expect(Socket).to receive(:tcp)
+        .with("whois.test", 43, nil, nil, connect_timeout: 10)
         .and_return(socket)
 
       handler = described_class.new

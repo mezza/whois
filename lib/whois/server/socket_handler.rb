@@ -19,6 +19,9 @@ module Whois
     # Whois library. It performs the WHOIS query using a synchronous
     # socket connection.
     class SocketHandler
+      CONNECT_TIMEOUT = 10
+      READ_TIMEOUT = 10
+
       # Array of connection errors to rescue
       # and wrap into a {Whois::ConnectionError}
       RESCUABLE_CONNECTION_ERRORS = [
@@ -51,16 +54,16 @@ module Whois
       #
       # @api private
       #
-      def execute(query, *args)
-        client = TCPSocket.new(*args)
-        client.write("#{query}\r\n")    # I could use put(foo) and forget the \n
+      def execute(query, host, port, local_host = nil, local_port = nil)
+        client = Socket.tcp(host, port, local_host, local_port, connect_timeout: CONNECT_TIMEOUT)
+        client.write("#{query}\r\n")
 
         content = +"".b
         begin
           while (chunk = client.read_nonblock(1024, exception: false))
             case chunk
             when :wait_readable
-              IO.select([client], nil, nil, 10) || break
+              IO.select([client], nil, nil, READ_TIMEOUT) || break
             when nil
               break
             else
@@ -74,8 +77,8 @@ module Whois
         end
 
         content.force_encoding("UTF-8")
-      ensure                            # and I really want to use read instead of gets.
-        client&.close # If != client something went wrong.
+      ensure
+        client&.close
       end
     end
   end
