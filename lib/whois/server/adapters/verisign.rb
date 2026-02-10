@@ -30,8 +30,13 @@ module Whois
           buffer_append response, host
 
           if options[:referral] != false && (referral = extract_referral(response))
-            response = query_the_socket(string, referral)
-            buffer_append(response, referral)
+            begin
+              response = query_the_socket(string, referral)
+              buffer_append(response, referral)
+            rescue ConnectionError, Timeout::Error
+              # If the referral server is unreachable, continue
+              # with the initial Verisign response.
+            end
           end
         end
 
