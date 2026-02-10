@@ -54,6 +54,7 @@ module Whois
       def execute(query, *args)
         client = TCPSocket.new(*args)
         client.write("#{query}\r\n")    # I could use put(foo) and forget the \n
+        client.close_write              # Signal to the server that the query is complete
         client.read&.force_encoding("UTF-8")                     # but write/read is more symmetric than puts/read
       ensure                            # and I really want to use read instead of gets.
         client&.close # If != client something went wrong.
